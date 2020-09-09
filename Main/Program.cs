@@ -3,10 +3,14 @@ using System;
 
 namespace Main
 {
-    class Program
+    public class Program
     {
+        private readonly IUtilMath mathUtil;
+        private readonly IHelpers helpers;
+
         private const string Message = "I am expecting two arguments.";
 
+        // This method is difficult to unit test, so we try to make it as small/simple as possible instead
         static void Main(string[] args)
         {
             if (args.Length != 2)
@@ -17,45 +21,31 @@ namespace Main
             int a = Convert.ToInt32(args[0]);
             int b = Convert.ToInt32(args[1]);
 
-            var instance = new Program();
+            // for real projects, we'd use a dependency injection framework
+            var mathUtil = new UtilMath();
+            var instance = new Program(new Helpers(mathUtil), mathUtil);
 
             Console.WriteLine("The magic number is {0}", instance.GetMagicNumber(a, b));
+        }
+
+        public Program(IHelpers injectedHelpers, IUtilMath injectedMathUtil)
+        {
+            this.mathUtil = injectedMathUtil;
+            this.helpers = injectedHelpers;
         }
 
         public int GetMagicNumber(int a, int b)
         {
             while (b > 0)
             {
-                a = UtilMath.Multiply(a, b);
+                a = this.mathUtil.Multiply(a, b);
 
                 b /= 2;
             }
 
             b = -a;
 
-            return MagicNumberHelper(a, b);
-        }
-
-        private int MagicNumberHelper(int a, int b)
-        {
-            int result;
-
-            switch (a % 3)
-            {
-                case 0:
-                    result = UtilMath.Subtract(a, b);
-                    break;
-                case 1:
-                    result = UtilMath.Multiply(a, b);
-                    break;
-                case 2:
-                    result = UtilMath.Divide(a, b);
-                    break;
-                default:
-                    throw new NotSupportedException();
-            }
-
-            return result;
+            return helpers.MagicNumberHelper(a, b);
         }
     }
 }
